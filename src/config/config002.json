@@ -1,0 +1,15 @@
+{
+  "seed": 777,
+  "feature_sets": [
+    "_101_season",
+    "_102_season_elo",
+    "_201_seed"
+  ],
+  "model": {
+    "name": "lgbm",
+    "params": {
+      "objective": "binary"
+    }
+  }
+}
+
