@@ -91,10 +91,12 @@ class _102_RegularSeasonEloRating(FeatureBase):
             columns={'LTeamID': 'TeamID', 'LELO': 'ELO', 'WELO': 'OppELO'}
         )
 
-        df = pd.concat([df1, df2], axis=0).sort_values(['Season', 'DayNum', 'TeamID']).reset_index(drop=True)
+        df = pd.concat([df1, df2], axis=0).sort_values(['Season', 'DayNum', 'TeamID']).reset_index(
+            drop=True)
         df['DiffELO'] = df.ELO - df.OppELO
-        stats = df.groupby(['Season', 'TeamID']).agg({'ELO': ['min', 'mean', 'max', 'std'],
-                                                      'DiffELO': ['min', 'mean', 'max', 'std']})
+        stats = df.groupby(['Season', 'TeamID']).agg({'ELO': ['min', 'mean', 'max', 'std', 'last'],
+                                                      'DiffELO': ['min', 'mean', 'max', 'std',
+                                                                  'last']})
         stats.columns = ["_".join(x) for x in stats.columns.ravel()]
         ltrend = df.groupby(['Season', 'TeamID'])['ELO'].apply(wrap_linear_trend)
         ltrend = pd.DataFrame(ltrend.values.tolist(),
@@ -106,7 +108,8 @@ class _102_RegularSeasonEloRating(FeatureBase):
                               index=ltrend.index)
         df14D = df[df.DayNum > 118]  # 最後の14日間
         stats14D = df14D.groupby(['Season', 'TeamID']).agg({'ELO': ['min', 'mean', 'max'],
-                                                            'DiffELO': ['min', 'mean', 'max', 'std']})
+                                                            'DiffELO': ['min', 'mean', 'max',
+                                                                        'std']})
         stats14D.columns = ["_".join(x).replace("ELO", 'ELO14D') for x in stats14D.columns.ravel()]
         ltrend14D = df14D.groupby(['Season', 'TeamID'])['ELO'].apply(wrap_linear_trend)
         ltrend14D = pd.DataFrame(ltrend14D.values.tolist(),
@@ -121,6 +124,8 @@ class _102_RegularSeasonEloRating(FeatureBase):
         return feat
 
     def post_process(self, trn, tst):
+        trn['ELO_last_diff'] = trn['T1ELO_last'] - trn['T2ELO_last']
+        tst['ELO_last_diff'] = tst['T1ELO_last'] - tst['T2ELO_last']
         return trn, tst
 
 

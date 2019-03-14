@@ -1,0 +1,17 @@
+{
+  "seed": 777,
+  "feature_sets": [
+    "_101_season",
+    "_102_season_elo",
+    "_201_seed",
+    "_301_tourney_wins",
+    "_401_pomrank"
+  ],
+  "model": {
+    "name": "lgbm",
+    "params": {
+      "objective": "binary"
+    }
+  }
+}
+
