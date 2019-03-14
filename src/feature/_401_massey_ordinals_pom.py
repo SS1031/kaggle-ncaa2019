@@ -14,8 +14,6 @@ class _401_POMRank(FeatureBase):
     fin = os.path.join(CONST.INDIR, 'MasseyOrdinals.csv')
 
     def create_feature_impl(self, df):
-        df = pd.read_csv(os.path.join(CONST.INDIR, 'MasseyOrdinals.csv'))
-
         df = df[df.SystemName == 'POM'].sort_values(['Season', 'RankingDayNum', 'TeamID'])
         feat = df.groupby(['Season', 'TeamID']).agg({
             'OrdinalRank': ['min', 'max', 'mean', 'last', 'std']
