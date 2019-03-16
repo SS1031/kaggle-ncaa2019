@@ -1,4 +1,5 @@
 INDIR = "../data/input"
+OUTDIR = "../data/output"
 FEATDIR = "../data/feature"
 SBMTDIR = "../data/output/sbmt"
 STAGE1 = "SampleSubmissionStage1.csv"

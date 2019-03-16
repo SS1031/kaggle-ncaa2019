@@ -95,8 +95,9 @@ if __name__ == '__main__':
     # sbmt.loc[(sbmt.T1Seed == 3) & (sbmt.T2Seed == 14), 'Pred'] = 0.975
     # sbmt.loc[(sbmt.T1Seed == 4) & (sbmt.T2Seed == 13), 'Pred'] = 0.975
 
-
     sbmt[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, config_name + '.csv'), index=False)
+    sbmt[sbmt.Season == 2018][['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, '2018_' + config_name + '.csv'),
+                                                     index=False)
     ans = utils.load_trn_base()
     ans = sbmt.merge(ans[['Season', 'T1TeamID', 'T2TeamID', 'Result']],
                      on=['Season', 'T1TeamID', 'T2TeamID'], how='inner')

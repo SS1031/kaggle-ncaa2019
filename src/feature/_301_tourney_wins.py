@@ -1,11 +1,9 @@
 """Touney win history
 """
 import os
-import sys
 import pandas as pd
 
 import CONST
-import feature._001_utils as utils
 from feature import FeatureBase
 
 
