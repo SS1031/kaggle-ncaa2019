@@ -34,7 +34,11 @@ if __name__ == '__main__':
     SEED = conf['seed']
     np.random.seed(SEED)
 
-    trn, tst = load_feature_sets(options.config)
+    options = parser.parse_args()
+    # from selection import cor_selector
+
+    # save_path = cor_selector(options.config)
+    trn, tst = load_feature_sets(conf_file=options.config)
 
     sbmt = pd.read_csv(os.path.join(CONST.INDIR, CONST.STAGE1))
     sbmt.drop(columns=['Pred'], inplace=True)

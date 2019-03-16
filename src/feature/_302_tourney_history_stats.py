@@ -50,7 +50,7 @@ class _302_TourneyHistoryStats(FeatureBase):
             tidy_df['TRPct'] = (tidy_df['DR'] + tidy_df['OR']) / (
                     tidy_df['DR'] + tidy_df['OR'] + tidy_df['OppDR'] + tidy_df['OppOR'])
 
-            tmp = tidy_df.groupby(['Season', 'TeamID']).agg({
+            tmp = tidy_df.groupby(['TeamID']).agg({
                 'Score': ['mean', 'median'],
                 'OppScore': ['mean'],
                 'FGA': ['mean', 'median', 'min', 'max'],
@@ -75,10 +75,11 @@ class _302_TourneyHistoryStats(FeatureBase):
             tmp['Season'] = s + 1
             feat = pd.concat([feat, tmp], axis=0)
 
-        return feat
+        return feat.reset_index(drop=True)
 
     def post_process(self, trn, tst):
-        return trn.fillna(0), tst.fillna(0)
+        print(trn.shape, tst.shape)
+        return trn, tst
 
 
 def tidy_tourney_detailed_data(df):
@@ -115,7 +116,6 @@ def tidy_tourney_detailed_data(df):
 
 if __name__ == '__main__':
     train, test = _302_TourneyHistoryStats().create_feature(devmode=True)
-    #
     # df = pd.read_csv(os.path.join(CONST.INDIR, 'NCAATourneyDetailedResults.csv'))
     # df['Season'] = df['Season'] - 1
     # uni_season = df.Season.unique()
@@ -177,5 +177,6 @@ if __name__ == '__main__':
     #                            'EffFGPct', 'FTR', 'ORPct', 'DRPct']
     #     tmp.columns = ["_".join(x) for x in tmp.columns.ravel()]
     #     tmp = tmp.reset_index()
+    #     tmp['Season'] = s + 1
     #
     #     feat = pd.concat([feat, tmp], axis=0)

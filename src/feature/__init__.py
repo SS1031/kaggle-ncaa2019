@@ -100,6 +100,9 @@ class FeatureBase:
 
         feature_cols = list(rename_dict.values())
 
+        assert 2096 == trn.shape[0]
+        assert 11390 == tst.shape[0]
+
         # Save ...
         if not devmode:
             utils.to_feather(trn[feature_cols], trn_dir)
