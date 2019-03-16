@@ -225,7 +225,8 @@ This file indicates the Division I conferences that have existed over the years 
 
 ConfAbbrev - this is a short abbreviation for each conference; the abbreviation is used in some other files to indicate the parent conference of a team or of a conference tournament.
 Description - this is a longer text name for the conference.
-Data Section 6 file: TeamConferences.csv
+
+### Data Section 6 file: TeamConferences.csv
 
 This file indicates the conference affiliations for each team during each season. Some conferences have changed their names from year to year, and/or changed which teams are part of the conference. This file tracks this information historically.
 
@@ -234,18 +235,20 @@ TeamID - this identifies the TeamID (as described in Teams.csv).
 ConfAbbrev - this identifies the conference (as described in Conferences.csv).
 Data Section 6 file: ConferenceTourneyGames.csv
 
-This file indicates which games were part of each year's post-season conference tournaments (all of which finished on Selection Sunday or earlier), starting from the 2001 season. Many of these conference tournament games are held on neutral sites, and many of the games are played by tournament-caliber teams just a few days before the NCAA® tournament. Thus these games could be considered as very similar to NCAA® tournament games, and (depending on your methodology) may be of use in optimizing your predictions. However, this is NOT a new listing of games; these games are already present within the RegularSeasonCompactResults and RegularSeasonDetailedResults files. So this file simply helps you to identify which of the "regular season" games since the 2001 season were actually conference tournament games, in case that is useful information.
+This file indicates which games were part SampleSubmissionStage1of each year's post-season conference tournaments (all of which finished on Selection Sunday or earlier), starting from the 2001 season. Many of these conference tournament games are held on neutral sites, and many of the games are played by tournament-caliber teams just a few days before the NCAA® tournament. Thus these games could be considered as very similar to NCAA® tournament games, and (depending on your methodology) may be of use in optimizing your predictions. However, this is NOT a new listing of games; these games are already present within the RegularSeasonCompactResults and RegularSeasonDetailedResults files. So this file simply helps you to identify which of the "regular season" games since the 2001 season were actually conference tournament games, in case that is useful information.
 
 ConfAbbrev - this identifies the conference (as described in Conferences.csv) that the tournament was for.
 Season, DayNum, WTeamID, LTeamID - these four columns are sufficient to uniquely identify each game. Further details about the game, such as the final score and other stats, can be found in the associated data row of the RegularSeasonCompactResults and/or RegularSeasonDetailedResults files.
-Data Section 6 file: SecondaryTourneyTeams.csv
+
+### Data Section 6 file: SecondaryTourneyTeams.csv
 
 This file identifies the teams that participated in post-season tournaments other than the NCAA® Tournament (such events would run in parallel with the NCAA® Tournament). These are teams that were not invited to the NCAA® Tournament and instead were invited to some other tournament, of which the NIT is the most prominent tournament, but there have also been the CBI, CIT, and Vegas 16 (V16) at various points in recent years. Depending on your methodology, you might find it useful to have these additional game results, above and beyond what is available from the NCAA® Tournament results. Many of these teams, especially in the NIT, were "bubble" teams of comparable strength to several NCAA® Tournament invitees, and so these games may be of use in model optimization for predicting NCAA® Tournament results. Also note that this information could be determined just from inspecting the Secondary Tourney Compact Results file, but is presented in this file as well, for your convenience.
 
 Season - this is the year of the associated entry in Seasons.csv (the year in which the post-season tournament was played)
 SecondaryTourney - this is the abbreviation of the tournament, either NIT, CBI, CIT, or V16 (which stands for Vegas 16).
 TeamID - this identifies the TeamID that participated in the tournament (as described in Teams.csv).
-Data Section 6 file: SecondaryTourneyCompactResults.csv
+
+### Data Section 6 file: SecondaryTourneyCompactResults.csv
 
 This file indicates the final scores for the tournament games of "secondary" post-season tournaments: the NIT, CBI, CIT, and Vegas 16. The detailed results (team box scores) have not been assembled for these games. For the most part, this file is exactly like other Compact Results listings, although it also has a column for Secondary Tourney.
 
@@ -256,7 +259,8 @@ This file indicates alternative spellings of many team names. It is intended for
 
 TeamNameSpelling - this is the spelling of the team name. It is always expressed in all lowercase letters - e.g. "ball state" rather than "Ball State" - in order to emphasize that any comparisons should be case-insensitive when matching.
 TeamID - this identifies the TeamID for the team that has the alternative spelling (as described in Teams.csv).
-Data Section 6 file: NCAATourneySlots
+
+### Data Section 6 file: NCAATourneySlots
 
 This file identifies the mechanism by which teams are paired against each other, depending upon their seeds, as the tournament proceeds through its rounds. It can be of use in identifying, for a given historical game, what round it occurred in, and what the seeds/slots were for the two teams (the meaning of "slots" is described below). Because of the existence of play-in games for particular seed numbers, the pairings have small differences from year to year. You may need to know these specifics if you are trying to represent/simulate the exact workings of the tournament bracket.
 
@@ -264,7 +268,8 @@ Season - this is the year of the associated entry in Seasons.csv (the year in wh
 Slot - this uniquely identifies one of the tournament games. For play-in games, it is a three-character string identifying the seed fulfilled by the winning team, such as W16 or Z13. For regular tournament games, it is a four-character string, where the first two characters tell you which round the game is (R1, R2, R3, R4, R5, or R6) and the second two characters tell you the expected seed of the favored team. Thus the first row is R1W1, identifying the Round 1 game played in the W bracket, where the favored team is the 1 seed. As a further example, the R2W1 slot indicates the Round 2 game that would have the 1 seed from the W bracket, assuming that all favored teams have won up to that point. Even if that R2W1 slot were actually a game between the W09 and W16 teams, it is still considered to be the R2W1 slot. The slot names are different for the final two rounds, where R5WX identifies the national semifinal game between the winners of regions W and X, and R5YZ identifies the national semifinal game between the winners of regions Y and Z, and R6CH identifies the championship game. The "slot" value is used in other columns in order to represent the advancement and pairings of winners of previous games.
 StrongSeed - this indicates the expected stronger-seeded team that plays in this game. For Round 1 games, a team seed is identified in this column (as listed in the "Seed" column in the NCAATourneySeeds.csv file), whereas for subsequent games, a slot is identified in this column. In the first record of this file (slot R1W1), we see that seed W01 is the "StrongSeed", which during the 1985 tournament would have been Georgetown. Whereas for games from Round 2 or later, rather than a team seed, we will see a "slot" referenced in this column. So in the 33rd record of this file (slot R2W1), it tells us that the winners of slots R1W1 and R1W8 will face each other in Round 2. Of course, in the last few games of the tournament - the national semifinals and finals - it's not really meaningful to talk about a "strong seed" or "weak seed", since you would have #1 seeds favored to face each other, but those games are nevertheless represented in the same format for the sake of consistency.
 WeakSeed - this indicates the expected weaker-seeded team that plays in this game, assuming all favored teams have won so far. For Round 1 games, a team seed is identified in this column (as listed in the "Seed" column in the NCAATourneySeeds.csv file), whereas for subsequent games, a slot is identified in this column.
-Data Section 6 file: NCAATourneySeedRoundSlots.csv
+
+### Data Section 6 file: NCAATourneySeedRoundSlots.csv
 
 This file helps to represent the bracket structure in any given year. No matter where the play-in seeds are located, we can always know, for a given tournament seed, exactly what bracket slot they would be playing in, on each possible game round, and what the possible DayNum values would be for that round. Thus, if we know when a historical game was played, and what the team's seed was, we can identify the slot for that game. This can be useful in representing or simulating the tournament bracket structure.
 
