@@ -12,11 +12,16 @@ import optuna
 from collections import OrderedDict
 from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error
+from sklearn.metrics import log_loss
 
 import CONST
 import feature._001_utils as utils
 from feature._002_load import load_feature_sets
-from sklearn.metrics import log_loss
+
+
+import warnings
+
+warnings.filterwarnings('ignore')
 
 if __name__ == '__main__':
 
@@ -40,6 +45,7 @@ if __name__ == '__main__':
 
     def validate_and_pred(trn, tst, iteration=10, params={'objective': 'binary'}, predict=True, verbose=True):
         feature_cols = [c for c in trn.columns if c not in CONST.EX_COLS]
+        categorical_cols = trn.select_dtypes('category').columns.tolist()
         valid_season = [2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017]
         valid_scores = []
         df_preds = pd.DataFrame(np.empty((tst.shape[0], iteration)))
@@ -52,10 +58,17 @@ if __name__ == '__main__':
                 params['bagging_seed'] = seed
                 train = trn[trn.Season < s]
                 valid = trn[s == trn.Season]
-                d_train = lgb.Dataset(train[feature_cols].astype(np.float32),
-                                      label=train['Result'].values, feature_name=feature_cols)
-                d_valid = lgb.Dataset(valid[feature_cols].astype(np.float32),
-                                      label=valid['Result'].values, feature_name=feature_cols)
+
+                d_train = lgb.Dataset(train[feature_cols],
+                                      label=train['Result'].values,
+                                      feature_name=feature_cols,
+                                      categorical_feature=categorical_cols)
+
+                d_valid = lgb.Dataset(valid[feature_cols],
+                                      label=valid['Result'].values,
+                                      feature_name=feature_cols,
+                                      categorical_feature=categorical_cols)
+
                 model = lgb.train(params, d_train,
                                   num_boost_round=10000,
                                   valid_sets=[d_valid],
