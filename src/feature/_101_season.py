@@ -22,18 +22,21 @@ class _101_RegularSeasonStats(FeatureBase):
         rename_dict.update({'WLoc': 'T1Home'})
         df1 = df.copy().rename(columns=rename_dict)
         df1['Result'] = 1
-        df1['T1Home'] = (df1['T1Home'] == 'H')
+        df1['IsHome'] = (df1['T1Home'] == 'H')
         rename_dict = dict(zip(lcols, [utils.lreplace('L', 'T1', c) for c in lcols]))
         rename_dict.update(dict(zip(wcols, [utils.lreplace('W', 'T2', c) for c in wcols])))
         rename_dict.update({'WLoc': 'T1Home'})
         df2 = df.copy().rename(columns=rename_dict)
-        df2['T1Home'] = (df2['T1Home'] == 'A')
+        df2['IsHome'] = (df2['T1Home'] == 'A')
         df2['Result'] = 0
         season = pd.concat([df1, df2], axis=0)
 
         season['DiffScore'] = season['T1Score'] - season['T2Score']
+        season['Home*Result'] = season['IsHome'] * season['Result']
         feat = pd.concat([
             season.groupby(['Season', 'T1TeamID']).agg({
+                'Result': ['mean'],
+                'Home*Result': ['mean'],
                 'T1Score': ['mean', 'median'],
                 'T2Score': ['mean'],
                 'DiffScore': ['mean'],
@@ -47,8 +50,10 @@ class _101_RegularSeasonStats(FeatureBase):
         feat = pd.concat([
             feat,
             (season[season.DayNum > 118].groupby(['Season', 'T1TeamID']).Result.sum() /
-             season[season.DayNum > 118].groupby(['Season', 'T1TeamID']).size()).rename('T1WinRatio14D'),
-            season[season.DayNum > 118].groupby(['Season', 'T1TeamID']).T1Score.mean().rename('T1Score14D_mean')
+             season[season.DayNum > 118].groupby(['Season', 'T1TeamID']).size()).rename(
+                'T1WinRatio14D'),
+            season[season.DayNum > 118].groupby(['Season', 'T1TeamID']).T1Score.mean().rename(
+                'T1Score14D_mean')
         ], axis=1).fillna(0).reset_index()
         rename_dict = dict(zip(feat.columns, [c.replace('T1', '') for c in feat.columns]))
         feat.rename(columns=rename_dict, inplace=True)
