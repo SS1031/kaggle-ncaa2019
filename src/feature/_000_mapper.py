@@ -1,6 +1,7 @@
 from feature._101_season import _101_RegularSeasonStats
 from feature._102_season_elo import _102_RegularSeasonEloRating
 from feature._103_season_advanced_stats import _103_SeasonAdvancedStats
+from feature._104_season_stats_delta import _104_SeasonStatsDelta
 from feature._201_seed import _201_Seed
 from feature._202_conference import _202_Conference
 from feature._203_conference_encoding import _203_ConferenceEncoding
@@ -13,6 +14,7 @@ MAPPER = {
     "_101_season": _101_RegularSeasonStats,
     "_102_season_elo": _102_RegularSeasonEloRating,
     "_103_season_advanced_stats": _103_SeasonAdvancedStats,
+    "_104_season_stats_delta": _104_SeasonStatsDelta,
     "_201_seed": _201_Seed,
     "_202_conference": _202_Conference,
     "_203_conference_encoding": _203_ConferenceEncoding,

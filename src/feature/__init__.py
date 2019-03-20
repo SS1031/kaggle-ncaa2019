@@ -91,6 +91,7 @@ class FeatureBase:
         # 保存する特徴量のカラムのプレフィックスとしてクラス名を追加
         feature_cols = [c for c in trn.columns if c not in CONST.EX_COLS]
         # nullが無いことを確認
+        print(tst.isnull().all())
         assert trn[feature_cols].notnull().all().all()
         assert tst[feature_cols].notnull().all().all()
 
