@@ -152,7 +152,7 @@ if __name__ == '__main__':
     params['learning_rate'] = 0.008
 
     score, sbmt = seed_average(trn, tst, iteration=1, params=params, predict=True, verbose=True)
-    assert pd.read_csv('../data/input/Stage2DataFilesMen/SampleSubmissionStage2.csv')['ID'].equals(sbmt['ID'])
+    assert pd.read_csv(os.path.join(CONST.INDIR, 'SampleSubmissionStage2.csv'))['ID'].equals(sbmt['ID'])
     sbmt[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, config_name + '.csv'), index=False)
 
     # # if options.postprocess:

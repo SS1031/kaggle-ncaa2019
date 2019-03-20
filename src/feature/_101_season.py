@@ -68,3 +68,4 @@ class _101_RegularSeasonStats(FeatureBase):
 
 if __name__ == '__main__':
     train, test = _101_RegularSeasonStats().create_feature(devmode=True)
+    pd.read_csv(os.path.join(CONST.INDIR, "RegularSeasonDetailedResults.csv"))

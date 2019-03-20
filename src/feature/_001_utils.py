@@ -71,7 +71,8 @@ def lreplace(pattern, sub, string):
 
 def load_trn_base():
     c_tourney = pd.read_csv(os.path.join(CONST.INDIR, 'NCAATourneyCompactResults.csv'))
-    c_tourney = c_tourney[c_tourney.Season >= 2003].reset_index(drop=True)
+    d_season = pd.read_csv(os.path.join(CONST.INDIR, "RegularSeasonDetailedResults.csv"))
+    c_tourney = c_tourney[c_tourney.Season > d_season.Season.min()].reset_index(drop=True)
 
     # データをT1, T2チームが両方勝つように二倍にする
     d_tour_wcols = [c for c in c_tourney.columns if 'W' in c and c != 'WLoc']
@@ -98,7 +99,7 @@ def load_trn_base():
         ['Season', 'T1TeamID', 'T2TeamID', 'Result']
     ].reset_index(drop=True)
 
-    return trn_base[2003 < trn_base.Season].reset_index(drop=True)
+    return trn_base
 
 
 def load_tst_base():
