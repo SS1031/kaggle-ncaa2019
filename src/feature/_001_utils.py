@@ -98,7 +98,7 @@ def load_trn_base():
         ['Season', 'T1TeamID', 'T2TeamID', 'Result']
     ].reset_index(drop=True)
 
-    return trn_base
+    return trn_base[2003 < trn_base.Season].reset_index(drop=True)
 
 
 def load_tst_base():

@@ -74,7 +74,7 @@ def load_feature_sets(conf_file="", selected_feature_file=""):
     print(f"Train dataset shape ={trn.shape}")
     print(f"Test dataset shape  ={tst.shape}")
 
-    assert 2096 == trn.shape[0]
-    assert 11390 == tst.shape[0]
+    assert utils.load_trn_base().shape[0] == trn.shape[0]
+    assert utils.load_tst_base().shape[0] == tst.shape[0]
 
     return trn, tst

@@ -21,7 +21,6 @@ class _301_TourneyWins(FeatureBase):
             feat = pd.concat([feat, tmp], axis=0).reset_index(drop=True)
 
         feat.rename(columns={'WTeamID': 'TeamID'}, inplace=True)
-
         return feat
 
     def post_process(self, trn, tst):
