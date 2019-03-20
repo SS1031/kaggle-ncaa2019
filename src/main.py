@@ -39,11 +39,10 @@ if __name__ == '__main__':
 
     trn, tst = load_feature_sets(conf_file=options.config)
 
-
     def validate_and_pred(trn, tst, iteration=10, params={'objective': 'binary'}, predict=True, verbose=True):
         feature_cols = [c for c in trn.columns if c not in CONST.EX_COLS]
         categorical_cols = trn.select_dtypes('category').columns.tolist()
-        valid_season = [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019]
+        valid_season = [2013, 2014, 2015, 2016, 2017]
         valid_scores = []
         df_preds = pd.DataFrame(np.empty((tst.shape[0], iteration)))
         for s in valid_season:
@@ -76,6 +75,7 @@ if __name__ == '__main__':
                     df_preds.loc[tst.Season == (s + 1), i] = model.predict(
                         tst[tst.Season == (s + 1)][feature_cols])
 
+
         sbmt = pd.read_csv(CONST.SS)
         sbmt.drop(columns=['Pred'], inplace=True)
         tmp = sbmt.ID.str.split('_', expand=True).astype(int)
@@ -88,6 +88,7 @@ if __name__ == '__main__':
         ans = utils.load_trn_base()
         ans = sbmt.merge(ans[['Season', 'T1TeamID', 'T2TeamID', 'Result']],
                          on=['Season', 'T1TeamID', 'T2TeamID'], how='inner')
+        print(ans)
         if verbose:
             print(f'Validation Score {np.mean(valid_scores)} +-({np.std(valid_scores)})')
             print('logloss', log_loss(ans['Result'], ans['Pred']))
@@ -134,12 +135,10 @@ if __name__ == '__main__':
     params['bagging_fraction'] = study.best_params['bagging_fraction']
     params['learning_rate'] = 0.01
 
-    score, sbmt = validate_and_pred(trn, tst, iteration=10, params=params, predict=True, verbose=True)
+    score, sbmt = validate_and_pred(trn, tst, iteration=1, params=params, predict=True, verbose=True)
     sbmt.loc[sbmt.Pred <= 0.025, 'Pred'] = 0.025
     sbmt.loc[sbmt.Pred >= 0.975, 'Pred'] = 0.975
-    sbmt[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, config_name + '.csv'), index=False)
-    sbmt[sbmt.Season == 2018][['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, '2018_' + config_name + '.csv'),
-                                                     index=False)
+    # sbmt[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, config_name + '.csv'), index=False)
+    # sbmt[sbmt.Season == 2018][['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, '2018_' + config_name + '.csv'),
+    #                                                  index=False)
 
-    # 63%|█████████████████████████████▌                 | 63/100 [00:06<00:03,  9.69 sec/trial]
-    # [2019-03-16 21:28:13,829] Finished a trial resulted in value: 0.9999. Current best value is 1.0000

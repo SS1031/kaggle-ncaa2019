@@ -40,43 +40,57 @@ if __name__ == '__main__':
     # # save_path = cor_selector(options.config)
     trn, tst = load_feature_sets(conf_file=options.config)
 
-    def validate_and_pred(trn, tst, iteration=10, params={'objective': 'binary'}, predict=True, verbose=True):
+
+    def train_valid_predict(train, valid, test, params, feature_cols, categorical_cols, verbose=True):
+
+        d_train = lgb.Dataset(train[feature_cols],
+                              label=train['Result'].values,
+                              feature_name=feature_cols,
+                              categorical_feature=categorical_cols)
+
+        d_valid = lgb.Dataset(valid[feature_cols],
+                              label=valid['Result'].values,
+                              feature_name=feature_cols,
+                              categorical_feature=categorical_cols)
+
+        model = lgb.train(params, d_train,
+                          num_boost_round=10000,
+                          valid_sets=[d_valid],
+                          early_stopping_rounds=100,
+                          verbose_eval=verbose * 100)
+
+        # valid_scores.append(model.best_score['valid_0']['binary_logloss'])
+        # if (s + 1) in tst.Season.unique():
+        #     df_preds.loc[tst.Season == (s + 1), i] = model.predict(
+        #         tst[tst.Season == (s + 1)][feature_cols])
+
+        return model.best_score['valid_0']['binary_logloss'], model.predict(test[feature_cols])
+
+
+    def seed_average(trn, tst, iteration=10, params={'objective': 'binary'}, predict=True, verbose=True):
 
         feature_cols = [c for c in trn.columns if c not in CONST.EX_COLS]
         categorical_cols = trn.select_dtypes('category').columns.tolist()
 
-        valid_season = [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018]
+        valid_season = [2013, 2014, 2015, 2016, 2017, 2018]
         valid_scores = []
-        df_preds = pd.DataFrame(np.empty((tst.shape[0], iteration)))
+        df_preds = pd.DataFrame(np.empty((tst[tst.Season.isin([2014, 2015, 2016, 2017, 2018, 2019])].shape[0],
+                                          iteration)))
         for s in valid_season:
             if verbose: print(f"Split Season : {s}")
             for i in range(iteration):
                 seed = (SEED + i) ** 2
                 np.random.seed(seed)
+
                 params['seed'] = seed
                 params['bagging_seed'] = seed
+
                 train = trn[trn.Season < s]
                 valid = trn[s == trn.Season]
-
-                d_train = lgb.Dataset(train[feature_cols],
-                                      label=train['Result'].values,
-                                      feature_name=feature_cols,
-                                      categorical_feature=categorical_cols)
-
-                d_valid = lgb.Dataset(valid[feature_cols],
-                                      label=valid['Result'].values,
-                                      feature_name=feature_cols,
-                                      categorical_feature=categorical_cols)
-
-                model = lgb.train(params, d_train,
-                                  num_boost_round=10000,
-                                  valid_sets=[d_valid],
-                                  early_stopping_rounds=100,
-                                  verbose_eval=verbose * 100)
-                valid_scores.append(model.best_score['valid_0']['binary_logloss'])
-                if (s + 1) in tst.Season.unique():
-                    df_preds.loc[tst.Season == (s + 1), i] = model.predict(
-                        tst[tst.Season == (s + 1)][feature_cols])
+                _score, _preds = train_valid_predict(train, valid, tst[tst.Season == (s + 1)],
+                                                     params, feature_cols, categorical_cols, verbose=False)
+                valid_scores.append(_score)
+                df_preds.loc[tst.Season == (s + 1), i] = _preds
 
         sbmt = pd.read_csv(CONST.SS)
         sbmt.drop(columns=['Pred'], inplace=True)
@@ -108,6 +122,7 @@ if __name__ == '__main__':
         'bagging_freq': 1,
     }
 
+
     class Objective(object):
         def __init__(self, trn, tst):
             self.trn = trn
@@ -124,23 +139,23 @@ if __name__ == '__main__':
             # params['lambda_l2'] = trial.suggest_uniform('lambda_l2', 0.7, 1.0)
             params['verbose'] = -1
 
-            return validate_and_pred(trn, tst, iteration=1, params=params, predict=False, verbose=False)
+            return seed_average(trn, tst, iteration=1, params=params, predict=False, verbose=False)
 
 
-    # objective = Objective(trn, tst)
-    # study = optuna.create_study()
-    # study.optimize(objective, n_trials=30)
-    # params['num_leaves'] = study.best_params['num_leaves']
-    # params['min_data_in_leaf'] = study.best_params['min_data_in_leaf']
-    # params['max_bin'] = study.best_params['max_bin']
-    # params['bagging_fraction'] = study.best_params['bagging_fraction']
-    # params['learning_rate'] = 0.008
+    objective = Objective(trn, tst)
+    study = optuna.create_study()
+    study.optimize(objective, n_trials=30)
+    params['num_leaves'] = study.best_params['num_leaves']
+    params['min_data_in_leaf'] = study.best_params['min_data_in_leaf']
+    params['max_bin'] = study.best_params['max_bin']
+    params['bagging_fraction'] = study.best_params['bagging_fraction']
+    params['learning_rate'] = 0.008
 
-    score, sbmt = validate_and_pred(trn, tst, iteration=10, params=params, predict=True, verbose=True)
-    sbmt.loc[sbmt.Pred <= 0.025, 'Pred'] = 0.025
-    sbmt.loc[sbmt.Pred >= 0.975, 'Pred'] = 0.975
+    score, sbmt = seed_average(trn, tst, iteration=1, params=params, predict=True, verbose=True)
+    print(sbmt)
     assert pd.read_csv('../data/input/Stage2DataFilesMen/SampleSubmissionStage2.csv')['ID'].equals(sbmt['ID'])
     sbmt[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, config_name + '.csv'), index=False)
+
     # # if options.postprocess:
     # #     print("Do post processing, Be Brave")
     # #     ### Anomaly event happened only once before - be brave
