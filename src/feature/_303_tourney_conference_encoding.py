@@ -6,7 +6,7 @@ from feature import FeatureBase
 import feature._001_utils as utils
 
 
-class _203_ConferenceEncoding(FeatureBase):
+class _303_TourneyConferenceEncoding(FeatureBase):
     fin = [
         os.path.join(CONST.INDIR, 'TeamConferences.csv'),
         os.path.join(CONST.INDIR, 'NCAATourneyCompactResults.csv')
@@ -24,26 +24,28 @@ class _203_ConferenceEncoding(FeatureBase):
 
         df = df.merge(df_conference.rename(columns={'ConfAbbrev': 'Conference'}),
                       on=['Season', 'TeamID'], how='left')
-        df['Season'] = df['Season'] - 1
+        df['Season'] = df['Season'] + 1
         uni_season = df.Season.unique()
         feat = pd.DataFrame()
-        for s in uni_season:
-            tmp = df[df['Season'] < s + 1].groupby('Conference').agg({'Result': 'mean'}).rename(
-                columns={'Result': 'ConferenceWinMean'}).reset_index()
-            tmp['Season'] = s + 1
-            feat = pd.concat([feat, tmp], axis=0).reset_index(drop=True)
-        df['Season'] = df['Season'] + 1
 
-        df = df.merge(feat, on=['Season', 'Conference'], how='left')[
-            ['Season', 'TeamID', 'ConferenceWinMean']
-        ]
-        feat = df.groupby(['Season', 'TeamID'])[['ConferenceWinMean']].mean().reset_index()
+        for s in uni_season:
+            tmp = df[df['Season'] <= s].groupby('Conference').agg({'Result': 'mean'}).rename(
+                columns={'Result': 'ConferenceWinMean'}).reset_index()
+            tmp['Season'] = s
+            feat = pd.concat([feat, tmp], axis=0).reset_index(drop=True)
+
+        # df['Season'] = df['Season'] + 1
+        feat = df_conference.rename(columns={'ConfAbbrev': 'Conference'}).merge(
+            feat, on=['Season', 'Conference'], how='left')[['Season', 'TeamID', 'ConferenceWinMean']]
 
         return feat
 
     def post_process(self, trn, tst):
+        trn.fillna(0, inplace=True)
+        tst.fillna(0, inplace=True)
         return trn, tst
 
 
 if __name__ == '__main__':
-    trn, tst = _203_ConferenceEncoding().create_feature(devmode=True)
+    trn, tst = _303_TourneyConferenceEncoding().create_feature(devmode=True)
+    df_conference = pd.read_csv(os.path.join(CONST.INDIR, 'TeamConferences.csv'))

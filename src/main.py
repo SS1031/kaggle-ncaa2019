@@ -39,6 +39,7 @@ if __name__ == '__main__':
 
     trn, tst = load_feature_sets(conf_file=options.config)
 
+
     def validate_and_pred(trn, tst, iteration=10, params={'objective': 'binary'}, predict=True, verbose=True):
         feature_cols = [c for c in trn.columns if c not in CONST.EX_COLS]
         categorical_cols = trn.select_dtypes('category').columns.tolist()
@@ -75,7 +76,6 @@ if __name__ == '__main__':
                     df_preds.loc[tst.Season == (s + 1), i] = model.predict(
                         tst[tst.Season == (s + 1)][feature_cols])
 
-
         sbmt = pd.read_csv(CONST.SS)
         sbmt.drop(columns=['Pred'], inplace=True)
         tmp = sbmt.ID.str.split('_', expand=True).astype(int)
@@ -88,7 +88,6 @@ if __name__ == '__main__':
         ans = utils.load_trn_base()
         ans = sbmt.merge(ans[['Season', 'T1TeamID', 'T2TeamID', 'Result']],
                          on=['Season', 'T1TeamID', 'T2TeamID'], how='inner')
-        print(ans)
         if verbose:
             print(f'Validation Score {np.mean(valid_scores)} +-({np.std(valid_scores)})')
             print('logloss', log_loss(ans['Result'], ans['Pred']))
@@ -141,4 +140,3 @@ if __name__ == '__main__':
     # sbmt[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, config_name + '.csv'), index=False)
     # sbmt[sbmt.Season == 2018][['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, '2018_' + config_name + '.csv'),
     #                                                  index=False)
-

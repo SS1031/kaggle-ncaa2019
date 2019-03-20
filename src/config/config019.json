@@ -6,7 +6,10 @@
     "_103_season_advanced_stats",
     "_104_season_stats_delta",
     "_201_seed",
-    "_202_conference"
+    "_202_conference",
+    "_301_tourney_wins",
+    "_302_tourney_history_stats",
+    "_303_tourney_conference_encoding"
   ],
   "model": {
     "name": "lgbm",

@@ -13,7 +13,7 @@ class _302_TourneyHistoryStats(FeatureBase):
     fin = os.path.join(CONST.INDIR, 'NCAATourneyDetailedResults.csv')
 
     def create_feature_impl(self, df):
-        df['Season'] = df['Season'] - 1
+        df['Season'] = df['Season'] + 1
         uni_season = df.Season.unique()
         feat = pd.DataFrame()
 
@@ -72,13 +72,16 @@ class _302_TourneyHistoryStats(FeatureBase):
 
             tmp.columns = ["_".join(x) for x in tmp.columns.ravel()]
             tmp = tmp.reset_index()
-            tmp['Season'] = s + 1
+            tmp['Season'] = s
             feat = pd.concat([feat, tmp], axis=0)
 
         return feat.reset_index(drop=True)
 
     def post_process(self, trn, tst):
-        print(trn.shape, tst.shape)
+        print(trn.isnull().sum() / len(trn))
+        print(tst.isnull().sum() / len(tst))
+        trn.fillna(-1, inplace=True)
+        tst.fillna(-1, inplace=True)
         return trn, tst
 
 

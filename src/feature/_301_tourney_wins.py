@@ -11,13 +11,13 @@ class _301_TourneyWins(FeatureBase):
     fin = os.path.join(CONST.INDIR, 'NCAATourneyCompactResults.csv')
 
     def create_feature_impl(self, df):
-        df['Season'] = df['Season'] - 1
+        df['Season'] = df['Season'] + 1
         uni_season = df.Season.unique()
         feat = pd.DataFrame()
         for s in uni_season:
-            tmp = df[df['Season'] < s + 1].groupby('WTeamID').agg({'WTeamID': 'size'}).rename(
+            tmp = df[df['Season'] <= s].groupby('WTeamID').agg({'WTeamID': 'size'}).rename(
                 columns={'WTeamID': 'TourneyWins'}).reset_index()
-            tmp['Season'] = s + 1
+            tmp['Season'] = s
             feat = pd.concat([feat, tmp], axis=0).reset_index(drop=True)
 
         feat.rename(columns={'WTeamID': 'TeamID'}, inplace=True)
