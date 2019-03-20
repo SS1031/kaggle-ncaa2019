@@ -102,7 +102,7 @@ def load_trn_base():
 
 
 def load_tst_base():
-    ss = pd.read_csv(os.path.join(CONST.INDIR, CONST.STAGE1))
+    ss = pd.read_csv(CONST.SS)
     tst = ss.ID.str.split('_', expand=True).astype(int)
     tst.columns = ['Season', 'T1TeamID', 'T2TeamID']
 

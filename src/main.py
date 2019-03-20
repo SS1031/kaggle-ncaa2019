@@ -18,7 +18,6 @@ import CONST
 import feature._001_utils as utils
 from feature._002_load import load_feature_sets
 
-
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -79,7 +78,7 @@ if __name__ == '__main__':
                     df_preds.loc[tst.Season == (s + 1), i] = model.predict(
                         tst[tst.Season == (s + 1)][feature_cols])
 
-        sbmt = pd.read_csv(os.path.join(CONST.INDIR, CONST.STAGE1))
+        sbmt = pd.read_csv(CONST.SS)
         sbmt.drop(columns=['Pred'], inplace=True)
         tmp = sbmt.ID.str.split('_', expand=True).astype(int)
         tmp.columns = ['Season', 'T1TeamID', 'T2TeamID']
