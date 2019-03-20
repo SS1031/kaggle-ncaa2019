@@ -59,15 +59,10 @@ if __name__ == '__main__':
                           early_stopping_rounds=100,
                           verbose_eval=verbose * 100)
 
-        # valid_scores.append(model.best_score['valid_0']['binary_logloss'])
-        # if (s + 1) in tst.Season.unique():
-        #     df_preds.loc[tst.Season == (s + 1), i] = model.predict(
-        #         tst[tst.Season == (s + 1)][feature_cols])
-
         return model.best_score['valid_0']['binary_logloss'], model.predict(test[feature_cols])
 
 
-    def seed_average(trn, tst, iteration=10, params={'objective': 'binary'}, predict=True, verbose=True):
+    def seed_average(trn, tst, iteration=10, params={'objective': 'binary'}, predict=True, verbose=True, imp=False):
 
         feature_cols = [c for c in trn.columns if c not in CONST.EX_COLS]
         categorical_cols = trn.select_dtypes('category').columns.tolist()
@@ -76,6 +71,7 @@ if __name__ == '__main__':
         valid_scores = []
         df_preds = pd.DataFrame(np.empty((tst[tst.Season.isin([2014, 2015, 2016, 2017, 2018, 2019])].shape[0],
                                           iteration)))
+        feature_importance_df = pd.DataFrame()
         for s in valid_season:
             if verbose: print(f"Split Season : {s}")
             for i in range(iteration):
@@ -87,10 +83,36 @@ if __name__ == '__main__':
 
                 train = trn[trn.Season < s]
                 valid = trn[s == trn.Season]
-                _score, _preds = train_valid_predict(train, valid, tst[tst.Season == (s + 1)],
-                                                     params, feature_cols, categorical_cols, verbose=False)
+
+                d_train = lgb.Dataset(train[feature_cols],
+                                      label=train['Result'].values,
+                                      feature_name=feature_cols,
+                                      categorical_feature=categorical_cols)
+
+                d_valid = lgb.Dataset(valid[feature_cols],
+                                      label=valid['Result'].values,
+                                      feature_name=feature_cols,
+                                      categorical_feature=categorical_cols)
+
+                model = lgb.train(params, d_train,
+                                  num_boost_round=10000,
+                                  valid_sets=[d_valid],
+                                  early_stopping_rounds=100,
+                                  verbose_eval=verbose * 100)
+
+                _score = model.best_score['valid_0']['binary_logloss']
+                _preds = model.predict(tst[tst.Season == (s + 1)][feature_cols])
+
+                # _score, _preds = train_valid_predict(train, valid, tst[tst.Season == (s + 1)],
+                #                                      params, feature_cols, categorical_cols, verbose=False)
                 valid_scores.append(_score)
                 df_preds.loc[tst.Season == (s + 1), i] = _preds
+
+                fold_importance_df = pd.DataFrame()
+                fold_importance_df["feature"] = feature_cols
+                fold_importance_df["importance"] = model.feature_importance()
+                fold_importance_df["fold"] = s + i
+                feature_importance_df = pd.concat([feature_importance_df, fold_importance_df], axis=0)
 
         sbmt = pd.read_csv(CONST.SS)
         sbmt.drop(columns=['Pred'], inplace=True)
@@ -104,11 +126,11 @@ if __name__ == '__main__':
         ans = sbmt.merge(ans[['Season', 'T1TeamID', 'T2TeamID', 'Result']],
                          on=['Season', 'T1TeamID', 'T2TeamID'], how='inner')
 
-        if verbose:
-            print(f'Validation Score {np.mean(valid_scores)} +-({np.std(valid_scores)})')
-            print('logloss', log_loss(ans['Result'], ans['Pred']))
+        print(f'Validation Score {np.mean(valid_scores)} +-({np.std(valid_scores)})')
+        print('logloss', log_loss(ans['Result'], ans['Pred']))
         if predict:
-            return log_loss(ans['Result'], ans['Pred']), sbmt[sbmt.Season == 2019].reset_index(drop=True)
+            return (log_loss(ans['Result'], ans['Pred']), sbmt[sbmt.Season == 2019].reset_index(drop=True),
+                    feature_importance_df)
         else:
             return log_loss(ans['Result'], ans['Pred'])
 
@@ -151,9 +173,23 @@ if __name__ == '__main__':
     params['bagging_fraction'] = study.best_params['bagging_fraction']
     params['learning_rate'] = 0.008
 
-    score, sbmt = seed_average(trn, tst, iteration=1, params=params, predict=True, verbose=True)
+    score, sbmt, feature_importance_df = seed_average(trn, tst, iteration=10, params=params, predict=True, verbose=True)
     assert pd.read_csv(os.path.join(CONST.INDIR, 'SampleSubmissionStage2.csv'))['ID'].equals(sbmt['ID'])
     sbmt[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, config_name + '.csv'), index=False)
+
+    cols = (feature_importance_df[
+                ["feature", "importance"]
+            ].groupby("feature").mean().sort_values(by="importance",
+                                                    ascending=False)[:100].index)
+    best_features = feature_importance_df.loc[feature_importance_df.feature.isin(cols)]
+    plt.figure(figsize=(14, 25))
+    sns.barplot(x="importance",
+                y="feature",
+                data=best_features.sort_values(by="importance",
+                                               ascending=False))
+    plt.title('LightGBM Features (avg over folds)')
+    plt.tight_layout()
+    plt.savefig(os.path.join(CONST.OUTDIR, f'imp_{config_name}.png'))
 
     # # if options.postprocess:
     # #     print("Do post processing, Be Brave")
