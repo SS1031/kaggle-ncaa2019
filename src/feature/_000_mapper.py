@@ -3,6 +3,7 @@ from feature._102_season_elo import _102_RegularSeasonEloRating
 from feature._103_season_advanced_stats import _103_SeasonAdvancedStats
 from feature._104_season_stats_delta import _104_SeasonStatsDelta
 from feature._105_season_advanced_stats_delta import _105_SeasonAdvancedStatsDelta
+from feature._106_season_interaction import _106_SeasonInteraction
 from feature._201_seed import _201_Seed
 from feature._202_conference import _202_Conference
 from feature._301_tourney_wins import _301_TourneyWins
@@ -17,6 +18,7 @@ MAPPER = {
     "_103_season_advanced_stats": _103_SeasonAdvancedStats,
     "_104_season_stats_delta": _104_SeasonStatsDelta,
     "_105_season_advanced_stats_delta": _105_SeasonAdvancedStatsDelta,
+    "_106_season_interaction": _106_SeasonInteraction,
     "_201_seed": _201_Seed,
     "_202_conference": _202_Conference,
     "_301_tourney_wins": _301_TourneyWins,
