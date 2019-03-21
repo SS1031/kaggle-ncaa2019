@@ -52,7 +52,9 @@ if __name__ == '__main__':
         valid_scores = []
         df_preds = pd.DataFrame(np.empty((tst[tst.Season.isin([2014, 2015, 2016, 2017, 2018, 2019])].shape[0],
                                           iteration)))
+        df_preds2019 = tst[tst.Season == 2019][['Season', 'T1TeamID', 'T2TeamID']]
         feature_importance_df = pd.DataFrame()
+
         for s in valid_season:
             if verbose: print(f"Split Season : {s}")
             for i in range(iteration):
@@ -83,9 +85,11 @@ if __name__ == '__main__':
 
                 _score = model.best_score['valid_0']['binary_logloss']
                 _preds = model.predict(tst[tst.Season == (s + 1)][feature_cols])
+                _preds2019 = model.predict(tst[tst.Season == 2019][feature_cols])
 
                 valid_scores.append(_score)
                 df_preds.loc[tst.Season == (s + 1), i] = _preds
+                df_preds2019[f"{s}_{i}"] = _preds2019
 
                 fold_importance_df = pd.DataFrame()
                 fold_importance_df["feature"] = feature_cols
@@ -101,6 +105,17 @@ if __name__ == '__main__':
         sbmt = sbmt.merge(pd.concat([tst[['Season', 'T1TeamID', 'T2TeamID']],
                                      df_preds.mean(axis=1).to_frame('Pred')], axis=1),
                           on=['Season', 'T1TeamID', 'T2TeamID'], how='left')
+
+        sbmt2 = pd.read_csv(os.path.join(CONST.INDIR, 'SampleSubmissionStage2.csv')).drop(columns=['Pred'])
+        sbmt2 = pd.concat([sbmt2, sbmt2.ID.str.split('_', expand=True).astype(int)], axis=1)
+        sbmt2.columns = ['ID', 'Season', 'T1TeamID', 'T2TeamID']
+        sbmt2 = sbmt2.merge(pd.concat([
+            df_preds2019[['Season', 'T1TeamID', 'T2TeamID']],
+            df_preds2019[
+                [c for c in df_preds2019 if c not in ['Season', 'T1TeamID', 'T2TeamID']]
+            ].mean(axis=1).to_frame('Pred')
+        ], axis=1), on=['Season', 'T1TeamID', 'T2TeamID'], how='left')[['ID', 'Pred']]
+
         ans = utils.load_trn_base()
         ans = sbmt.merge(ans[['Season', 'T1TeamID', 'T2TeamID', 'Result']],
                          on=['Season', 'T1TeamID', 'T2TeamID'], how='inner')
@@ -109,7 +124,7 @@ if __name__ == '__main__':
         print('logloss', log_loss(ans['Result'], ans['Pred']))
         if predict:
             return (log_loss(ans['Result'], ans['Pred']), sbmt[sbmt.Season == 2019].reset_index(drop=True),
-                    feature_importance_df)
+                    sbmt2, feature_importance_df)
         else:
             return log_loss(ans['Result'], ans['Pred'])
 
@@ -143,6 +158,7 @@ if __name__ == '__main__':
             return seed_average(trn, tst, iteration=1, params=params, predict=False, verbose=False)
 
 
+
     objective = Objective(trn, tst)
     study = optuna.create_study()
     study.optimize(objective, n_trials=30)
@@ -152,9 +168,13 @@ if __name__ == '__main__':
     params['bagging_fraction'] = study.best_params['bagging_fraction']
     params['learning_rate'] = 0.008
 
-    score, sbmt, feature_importance_df = seed_average(trn, tst, iteration=10, params=params, predict=True, verbose=True)
+    score, sbmt, sbmt2, feature_importance_df = seed_average(trn, tst, iteration=1, params=params,
+                                                             predict=True, verbose=True)
     assert pd.read_csv(os.path.join(CONST.INDIR, 'SampleSubmissionStage2.csv'))['ID'].equals(sbmt['ID'])
+    assert pd.read_csv(os.path.join(CONST.INDIR, 'SampleSubmissionStage2.csv'))['ID'].equals(sbmt2['ID'])
+
     sbmt[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, config_name + '.csv'), index=False)
+    sbmt2[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, 'SeasonAvg_' + config_name + '.csv'), index=False)
 
     cols = (feature_importance_df[
                 ["feature", "importance"]
