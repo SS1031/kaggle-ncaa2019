@@ -13,7 +13,7 @@ class _101_SeasonStats(FeatureBase):
     fin = os.path.join(CONST.INDIR, "RegularSeasonDetailedResults.csv")
 
     def create_feature_impl(self, df):
-        tidy_df = utils.tidy_detailed_data(df)
+        tidy_df = utils.tidy_data(df)
         tidy_df['ScoreDiff'] = tidy_df['Score'] - tidy_df['OppScore']
         tidy_df['ORDiff'] = tidy_df['OR'] - tidy_df['OppOR']
         tidy_df['DRDiff'] = tidy_df['DR'] - tidy_df['OppDR']

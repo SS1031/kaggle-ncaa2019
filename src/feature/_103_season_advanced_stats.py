@@ -15,7 +15,7 @@ class _103_SeasonAdvancedStats(FeatureBase):
     fin = os.path.join(CONST.INDIR, "RegularSeasonDetailedResults.csv")
 
     def create_feature_impl(self, df):
-        tidy_df = utils.tidy_detailed_data(df)
+        tidy_df = utils.tidy_data(df)
 
         # Possessions = 0.96 x (FGA + Turnovers + (0.475 x FTA) - Offensive Rebounds
         tidy_df['Poss'] = 0.96 * (tidy_df['FGA'] + tidy_df['TO'] + ((0.475) * tidy_df['FTA']) - tidy_df['OR'])

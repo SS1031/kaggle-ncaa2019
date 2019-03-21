@@ -110,7 +110,7 @@ def load_tst_base():
     return tst
 
 
-def tidy_detailed_data(df):
+def tidy_data(df):
     initial_nrow = df.shape[0]
     df['MatchID'] = (df['Season'].astype(str) + df['DayNum'].astype(str) +
                      df['WTeamID'].astype(str) + df['LTeamID'].astype(str))

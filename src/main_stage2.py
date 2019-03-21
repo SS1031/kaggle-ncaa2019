@@ -160,14 +160,14 @@ if __name__ == '__main__':
 
     objective = Objective(trn, tst)
     study = optuna.create_study()
-    study.optimize(objective, n_trials=30)
+    study.optimize(objective, n_trials=300)
     params['num_leaves'] = study.best_params['num_leaves']
     params['min_data_in_leaf'] = study.best_params['min_data_in_leaf']
     params['max_bin'] = study.best_params['max_bin']
     params['bagging_fraction'] = study.best_params['bagging_fraction']
     params['learning_rate'] = 0.008
 
-    score, sbmt, sbmt2, feature_importance_df = seed_average(trn, tst, iteration=10, params=params,
+    score, sbmt, sbmt2, feature_importance_df = seed_average(trn, tst, iteration=100, params=params,
                                                              predict=True, verbose=True)
     assert pd.read_csv(os.path.join(CONST.INDIR, 'SampleSubmissionStage2.csv'))['ID'].equals(sbmt['ID'])
     assert pd.read_csv(os.path.join(CONST.INDIR, 'SampleSubmissionStage2.csv'))['ID'].equals(sbmt2['ID'])
@@ -214,7 +214,10 @@ if __name__ == '__main__':
     sbmt2.loc[(sbmt2.T1Seed == 1) & (sbmt2.T2Seed == 16), 'Pred'] = 1
     sbmt2.loc[(sbmt2.T1Seed == 2) & (sbmt2.T2Seed == 15), 'Pred'] = 1
     sbmt2.loc[(sbmt2.T1Seed == 3) & (sbmt2.T2Seed == 14), 'Pred'] = 1
+    sbmt2[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, 'PP_SeasonAVG_' + config_name + '.csv'), index=False)
+
     # GoZags
     sbmt2.loc[(sbmt2.T1TeamID == 1211), 'Pred'] = 1
     sbmt2.loc[(sbmt2.T2TeamID == 1211), 'Pred'] = 0
-    sbmt2[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, 'PP_SeasonAVG_' + config_name + '.csv'), index=False)
+    sbmt2[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, 'GoZags_PP_SeasonAVG_' + config_name + '.csv'),
+                                 index=False)
