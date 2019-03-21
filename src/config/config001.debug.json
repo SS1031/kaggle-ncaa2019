@@ -1,7 +1,7 @@
 {
   "seed": 777,
   "feature_sets": [
-    "_101_season",
+    "_101_season_stats",
     "_201_seed"
   ],
   "model": {

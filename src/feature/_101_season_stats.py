@@ -9,7 +9,7 @@ import feature._001_utils as utils
 from feature import FeatureBase
 
 
-class _101_RegularSeasonStats(FeatureBase):
+class _101_SeasonStats(FeatureBase):
     fin = os.path.join(CONST.INDIR, "RegularSeasonDetailedResults.csv")
 
     def create_feature_impl(self, df):
@@ -61,4 +61,4 @@ class _101_RegularSeasonStats(FeatureBase):
 
 
 if __name__ == '__main__':
-    train, test = _101_RegularSeasonStats().create_feature(devmode=True)
+    train, test = _101_SeasonStats().create_feature(devmode=True)
