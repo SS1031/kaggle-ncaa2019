@@ -78,8 +78,6 @@ class _302_TourneyHistoryStats(FeatureBase):
         return feat.reset_index(drop=True)
 
     def post_process(self, trn, tst):
-        trn.fillna(-1, inplace=True)
-        tst.fillna(-1, inplace=True)
         return trn, tst
 
 

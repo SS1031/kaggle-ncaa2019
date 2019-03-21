@@ -90,9 +90,10 @@ class FeatureBase:
 
         # 保存する特徴量のカラムのプレフィックスとしてクラス名を追加
         feature_cols = [c for c in trn.columns if c not in CONST.EX_COLS]
+
         # nullが無いことを確認
-        assert trn[feature_cols].notnull().all().all()
-        assert tst[feature_cols].notnull().all().all()
+        if not (trn[feature_cols].notnull().all().all() and tst[feature_cols].notnull().all().all()):
+            warnings.warn(f"\n!!! There are null features in {self.__class__.__name__}!!!")
 
         rename_dict = dict(zip(feature_cols, [f'{self.__class__.__name__}_{c}' for c in feature_cols]))
         trn = trn.rename(columns=rename_dict)
