@@ -43,7 +43,7 @@ if __name__ == '__main__':
         trn, tst = load_feature_sets(conf_file=options.config)
 
 
-    def seed_average(trn, tst, iteration=10, params={'objective': 'binary'}, predict=True, verbose=True, imp=False):
+    def seed_average(trn, tst, iteration=10, params={'objective': 'binary'}, predict=True, verbose=True):
 
         feature_cols = [c for c in trn.columns if c not in CONST.EX_COLS]
         categorical_cols = trn.select_dtypes('category').columns.tolist()
@@ -114,15 +114,15 @@ if __name__ == '__main__':
             df_preds2019[
                 [c for c in df_preds2019 if c not in ['Season', 'T1TeamID', 'T2TeamID']]
             ].mean(axis=1).to_frame('Pred')
-        ], axis=1), on=['Season', 'T1TeamID', 'T2TeamID'], how='left')[['ID', 'Pred']]
+        ], axis=1), on=['Season', 'T1TeamID', 'T2TeamID'], how='left')
 
         ans = utils.load_trn_base()
         ans = sbmt.merge(ans[['Season', 'T1TeamID', 'T2TeamID', 'Result']],
                          on=['Season', 'T1TeamID', 'T2TeamID'], how='inner')
 
-        print(f'Validation Score {np.mean(valid_scores)} +-({np.std(valid_scores)})')
-        print('logloss', log_loss(ans['Result'], ans['Pred']))
         if predict:
+            print(f'Validation Score {np.mean(valid_scores)} +-({np.std(valid_scores)})')
+            print('logloss', log_loss(ans['Result'], ans['Pred']))
             return (log_loss(ans['Result'], ans['Pred']), sbmt[sbmt.Season == 2019].reset_index(drop=True),
                     sbmt2, feature_importance_df)
         else:
@@ -158,7 +158,6 @@ if __name__ == '__main__':
             return seed_average(trn, tst, iteration=1, params=params, predict=False, verbose=False)
 
 
-
     objective = Objective(trn, tst)
     study = optuna.create_study()
     study.optimize(objective, n_trials=30)
@@ -168,7 +167,7 @@ if __name__ == '__main__':
     params['bagging_fraction'] = study.best_params['bagging_fraction']
     params['learning_rate'] = 0.008
 
-    score, sbmt, sbmt2, feature_importance_df = seed_average(trn, tst, iteration=1, params=params,
+    score, sbmt, sbmt2, feature_importance_df = seed_average(trn, tst, iteration=10, params=params,
                                                              predict=True, verbose=True)
     assert pd.read_csv(os.path.join(CONST.INDIR, 'SampleSubmissionStage2.csv'))['ID'].equals(sbmt['ID'])
     assert pd.read_csv(os.path.join(CONST.INDIR, 'SampleSubmissionStage2.csv'))['ID'].equals(sbmt2['ID'])
@@ -190,30 +189,32 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.savefig(os.path.join(CONST.OUTDIR, f'imp_{config_name}.png'))
 
-    # # if options.postprocess:
-    # #     print("Do post processing, Be Brave")
-    # #     ### Anomaly event happened only once before - be brave
-    # #     seed = pd.read_csv(os.path.join(CONST.INDIR, 'NCAATourneySeeds.csv'))
-    # #     seed['Seed'] = seed['Seed'].str[1:3].astype(int)
-    # #     sbmt = sbmt.merge(seed.rename(columns={'TeamID': 'T1TeamID', 'Seed': 'T1Seed'}),
-    # #                       on=['Season', 'T1TeamID'], how='left')
-    # #     sbmt = sbmt.merge(seed.rename(columns={'TeamID': 'T2TeamID', 'Seed': 'T2Seed'}),
-    # #                       on=['Season', 'T2TeamID'], how='left')
-    # #     sbmt.loc[(sbmt.T1Seed == 16) & (sbmt.T2Seed == 1), 'Pred'] = 0
-    # #     sbmt.loc[(sbmt.T1Seed == 15) & (sbmt.T2Seed == 2), 'Pred'] = 0
-    # #     sbmt.loc[(sbmt.T1Seed == 14) & (sbmt.T2Seed == 3), 'Pred'] = 0.025
-    # #     sbmt.loc[(sbmt.T1Seed == 13) & (sbmt.T2Seed == 4), 'Pred'] = 0.025
-    # #     sbmt.loc[(sbmt.T1Seed == 1) & (sbmt.T2Seed == 16), 'Pred'] = 1
-    # #     sbmt.loc[(sbmt.T1Seed == 2) & (sbmt.T2Seed == 15), 'Pred'] = 1
-    # #     sbmt.loc[(sbmt.T1Seed == 3) & (sbmt.T2Seed == 14), 'Pred'] = 0.975
-    # #     sbmt.loc[(sbmt.T1Seed == 4) & (sbmt.T2Seed == 13), 'Pred'] = 0.975
-    # #     sbmt[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, 'pp' + config_name + '.csv'), index=False)
-    # #     sbmt[sbmt.Season == 2018][['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, 'pp2018_' + config_name + '.csv'),
-    # #                                                      index=False)
-    # #     ans = utils.load_trn_base()
-    # #     ans = sbmt.merge(ans[['Season', 'T1TeamID', 'T2TeamID', 'Result']],
-    # #                      on=['Season', 'T1TeamID', 'T2TeamID'], how='inner')
-    # #     print('logloss(after post-process)', log_loss(ans['Result'], ans['Pred']))
-    #
-    # # 63%|█████████████████████████████▌                 | 63/100 [00:06<00:03,  9.69 sec/trial]
-    # # [2019-03-16 21:28:13,829] Finished a trial resulted in value: 0.9999. Current best value is 1.0000
+    print("Do post processing, Be Brave")
+    seed = pd.read_csv(os.path.join(CONST.INDIR, 'NCAATourneySeeds.csv'))
+    seed['Seed'] = seed['Seed'].str[1:3].astype(int)
+    sbmt = sbmt.merge(seed.rename(columns={'TeamID': 'T1TeamID', 'Seed': 'T1Seed'}),
+                      on=['Season', 'T1TeamID'], how='left')
+    sbmt = sbmt.merge(seed.rename(columns={'TeamID': 'T2TeamID', 'Seed': 'T2Seed'}),
+                      on=['Season', 'T2TeamID'], how='left')
+    sbmt.loc[(sbmt.T1Seed == 16) & (sbmt.T2Seed == 1), 'Pred'] = 0
+    sbmt.loc[(sbmt.T1Seed == 15) & (sbmt.T2Seed == 2), 'Pred'] = 0
+    sbmt.loc[(sbmt.T1Seed == 14) & (sbmt.T2Seed == 3), 'Pred'] = 0
+    sbmt.loc[(sbmt.T1Seed == 1) & (sbmt.T2Seed == 16), 'Pred'] = 1
+    sbmt.loc[(sbmt.T1Seed == 2) & (sbmt.T2Seed == 15), 'Pred'] = 1
+    sbmt.loc[(sbmt.T1Seed == 3) & (sbmt.T2Seed == 14), 'Pred'] = 1
+    sbmt[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, 'PP_' + config_name + '.csv'), index=False)
+
+    sbmt2 = sbmt2.merge(seed.rename(columns={'TeamID': 'T1TeamID', 'Seed': 'T1Seed'}),
+                        on=['Season', 'T1TeamID'], how='left')
+    sbmt2 = sbmt2.merge(seed.rename(columns={'TeamID': 'T2TeamID', 'Seed': 'T2Seed'}),
+                        on=['Season', 'T2TeamID'], how='left')
+    sbmt2.loc[(sbmt2.T1Seed == 16) & (sbmt2.T2Seed == 1), 'Pred'] = 0
+    sbmt2.loc[(sbmt2.T1Seed == 15) & (sbmt2.T2Seed == 2), 'Pred'] = 0
+    sbmt2.loc[(sbmt2.T1Seed == 14) & (sbmt2.T2Seed == 3), 'Pred'] = 0
+    sbmt2.loc[(sbmt2.T1Seed == 1) & (sbmt2.T2Seed == 16), 'Pred'] = 1
+    sbmt2.loc[(sbmt2.T1Seed == 2) & (sbmt2.T2Seed == 15), 'Pred'] = 1
+    sbmt2.loc[(sbmt2.T1Seed == 3) & (sbmt2.T2Seed == 14), 'Pred'] = 1
+    # GoZags
+    sbmt2.loc[(sbmt2.T1TeamID == 1211), 'Pred'] = 1
+    sbmt2.loc[(sbmt2.T2TeamID == 1211), 'Pred'] = 0
+    sbmt2[['ID', 'Pred']].to_csv(os.path.join(CONST.SBMTDIR, 'PP_SeasonAVG_' + config_name + '.csv'), index=False)

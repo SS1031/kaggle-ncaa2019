@@ -69,7 +69,6 @@ def lgbm_select(config):
     y = trn['Result'].copy()
 
     lgbc = LGBMClassifier()
-
     embeded_lgb_selector = SelectFromModel(lgbc, threshold='1.25*median')
     embeded_lgb_selector.fit(X, y)
 

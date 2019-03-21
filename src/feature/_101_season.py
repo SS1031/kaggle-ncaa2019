@@ -13,16 +13,22 @@ class _101_RegularSeasonStats(FeatureBase):
     fin = os.path.join(CONST.INDIR, "RegularSeasonDetailedResults.csv")
 
     def create_feature_impl(self, df):
-        df = pd.read_csv(os.path.join(CONST.INDIR, "RegularSeasonDetailedResults.csv"))
         tidy_df = utils.tidy_detailed_data(df)
         tidy_df['ScoreDiff'] = tidy_df['Score'] - tidy_df['OppScore']
         tidy_df['ORDiff'] = tidy_df['OR'] - tidy_df['OppOR']
         tidy_df['DRDiff'] = tidy_df['DR'] - tidy_df['OppDR']
         tidy_df['TODiff'] = tidy_df['TO'] - tidy_df['OppTO']
+        tidy_df['FGM2'] = tidy_df['FGM'] - tidy_df['FGM3']
+        tidy_df['FGA2'] = tidy_df['FGA'] - tidy_df['FGA3']
+
         agg_dict = {
             'Score': ['mean', 'median'],
             'FGM': ['mean'],
-            'FGM3': ['mean', 'median'],
+            'FGM2': ['mean'],
+            'FGM3': ['mean'],
+            'FGA': ['mean'],
+            'FGA2': ['mean'],
+            'FGA3': ['mean'],
             'FTM': ['mean'],
             'FTA': ['mean'],
             'OR': ['mean'],
@@ -37,7 +43,7 @@ class _101_RegularSeasonStats(FeatureBase):
             'OppDR': ['mean'],
             'OppFGA': ['mean'],
             'OppTO': ['mean'],
-            'Result': ['mean'],
+            'Result': ['mean', 'sum'],
         }
 
         feat = tidy_df.groupby(['Season', 'TeamID']).agg(agg_dict)

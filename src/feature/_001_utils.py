@@ -120,24 +120,21 @@ def tidy_detailed_data(df):
     wcols = [c for c in df.columns if 'W' in c and c != 'WLoc']
     lcols = [c for c in df.columns if 'L' in c and c != 'WLoc']
 
-    t1df = df[['MatchID', 'Season', 'DayNum'] + wcols + ['LScore', 'LOR', 'LDR', 'LFGA', 'LTO']].copy()
+    t1df = df[['MatchID', 'Season', 'DayNum'] + wcols + lcols].copy()
     rename_dict = dict(zip(wcols, [lreplace('W', '', c) for c in wcols]))
-    rename_dict['LScore'] = 'OppScore'
-    rename_dict['LOR'] = 'OppOR'
-    rename_dict['LDR'] = 'OppDR'
-    rename_dict['LFGA'] = 'OppFGA'
-    rename_dict['LTO'] = 'OppTO'
+    rename_dict.update(
+        dict(zip(lcols, [lreplace('L', 'Opp', c) for c in lcols]))
+    )
     t1df.rename(columns=rename_dict, inplace=True)
+
     t1df['IsHome'] = (df.WLoc == 'H')
     t1df['Result'] = 1
 
-    t2df = df[['MatchID', 'Season', 'DayNum'] + lcols + ['WScore', 'WOR', 'WDR', 'WFGA', 'WTO']].copy()
+    t2df = df[['MatchID', 'Season', 'DayNum'] + lcols + wcols].copy()
     rename_dict = dict(zip(lcols, [lreplace('L', '', c) for c in lcols]))
-    rename_dict['WScore'] = 'OppScore'
-    rename_dict['WOR'] = 'OppOR'
-    rename_dict['WDR'] = 'OppDR'
-    rename_dict['WFGA'] = 'OppFGA'
-    rename_dict['WTO'] = 'OppTO'
+    rename_dict.update(
+        dict(zip(wcols, [lreplace('W', 'Opp', c) for c in wcols]))
+    )
     t2df.rename(columns=rename_dict, inplace=True)
     t2df['IsHome'] = (df.WLoc == 'A')
     t2df['Result'] = 0
