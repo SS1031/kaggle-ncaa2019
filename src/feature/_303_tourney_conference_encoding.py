@@ -41,6 +41,8 @@ class _303_TourneyConferenceEncoding(FeatureBase):
         return feat
 
     def post_process(self, trn, tst):
+        print(trn.isnull().sum() / len(trn))
+        print(tst.isnull().sum() / len(tst))
         trn.fillna(0, inplace=True)
         tst.fillna(0, inplace=True)
         return trn, tst
@@ -48,4 +50,4 @@ class _303_TourneyConferenceEncoding(FeatureBase):
 
 if __name__ == '__main__':
     trn, tst = _303_TourneyConferenceEncoding().create_feature(devmode=True)
-    df_conference = pd.read_csv(os.path.join(CONST.INDIR, 'TeamConferences.csv'))
+    # df_conference = pd.read_csv(os.path.join(CONST.INDIR, 'TeamConferences.csv'))

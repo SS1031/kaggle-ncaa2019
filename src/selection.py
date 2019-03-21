@@ -58,13 +58,38 @@ def rf_selector(config):
     print(str(len(embeded_rf_feature)), 'selected features')
 
 
+def lgbm_select(config):
+    from sklearn.feature_selection import SelectFromModel
+    from lightgbm import LGBMClassifier
+
+    config_name = os.path.basename(config).replace(".json", "")
+    trn, tst = load_feature_sets(conf_file=config)
+    feature_cols = [c for c in trn.columns if c not in CONST.EX_COLS]
+    X = trn[feature_cols].copy()
+    y = trn['Result'].copy()
+
+    lgbc = LGBMClassifier()
+
+    embeded_lgb_selector = SelectFromModel(lgbc, threshold='1.25*median')
+    embeded_lgb_selector.fit(X, y)
+
+    embeded_lgb_support = embeded_lgb_selector.get_support()
+    embeded_lgb_feature = X.loc[:, embeded_lgb_support].columns.tolist()
+    print(str(len(embeded_lgb_feature)), 'selected features')
+
+    save_path = os.path.join(CONST.SELECTEDDIR, f'lgb_selection_{config_name}.csv')
+    pd.DataFrame({'feature': embeded_lgb_feature}).to_csv(save_path, index=False)
+
+    return embeded_lgb_feature
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default='./config/config001.debug.json')
 
     options = parser.parse_args()
     # save_path = cor_selector(options.config)
-    trn, tst = load_feature_sets(conf_file=options.config)
-    trn, tst = load_feature_sets(conf_file='./config/config010.json')
-    rf_selector(options.config)
-
+    # trn, tst = load_feature_sets(conf_file=options.config)
+    # trn, tst = load_feature_sets(conf_file='./config/config010.json')
+    # rf_selector(options.config)
+    feature = lgbm_select(options.config)

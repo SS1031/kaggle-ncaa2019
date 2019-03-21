@@ -1,6 +1,5 @@
 import os
 import json
-import time
 import argparse
 import numpy as np
 import pandas as pd
@@ -10,8 +9,6 @@ import seaborn as sns
 
 import optuna
 from collections import OrderedDict
-from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error
 from sklearn.metrics import log_loss
 
 import CONST
@@ -26,6 +23,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default='./config/config001.debug.json')
     parser.add_argument('--postprocess', action='store_true')
+    parser.add_argument('--selected', default='')
     options = parser.parse_args()
     with open(options.config, "r") as fp:
         conf = json.load(fp, object_pairs_hook=OrderedDict)
@@ -38,28 +36,11 @@ if __name__ == '__main__':
 
     # from selection import cor_selector
     # # save_path = cor_selector(options.config)
-    trn, tst = load_feature_sets(conf_file=options.config)
 
-
-    def train_valid_predict(train, valid, test, params, feature_cols, categorical_cols, verbose=True):
-
-        d_train = lgb.Dataset(train[feature_cols],
-                              label=train['Result'].values,
-                              feature_name=feature_cols,
-                              categorical_feature=categorical_cols)
-
-        d_valid = lgb.Dataset(valid[feature_cols],
-                              label=valid['Result'].values,
-                              feature_name=feature_cols,
-                              categorical_feature=categorical_cols)
-
-        model = lgb.train(params, d_train,
-                          num_boost_round=10000,
-                          valid_sets=[d_valid],
-                          early_stopping_rounds=100,
-                          verbose_eval=verbose * 100)
-
-        return model.best_score['valid_0']['binary_logloss'], model.predict(test[feature_cols])
+    if options.selected != '':
+        trn, tst = load_feature_sets(selected_feature_file=options.selected)
+    else:
+        trn, tst = load_feature_sets(conf_file=options.config)
 
 
     def seed_average(trn, tst, iteration=10, params={'objective': 'binary'}, predict=True, verbose=True, imp=False):
@@ -103,8 +84,6 @@ if __name__ == '__main__':
                 _score = model.best_score['valid_0']['binary_logloss']
                 _preds = model.predict(tst[tst.Season == (s + 1)][feature_cols])
 
-                # _score, _preds = train_valid_predict(train, valid, tst[tst.Season == (s + 1)],
-                #                                      params, feature_cols, categorical_cols, verbose=False)
                 valid_scores.append(_score)
                 df_preds.loc[tst.Season == (s + 1), i] = _preds
 
